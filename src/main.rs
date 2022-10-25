@@ -1,6 +1,7 @@
 use array2::Array2;
 use csc411_image::{RgbImage, Read, Write};
 use clap::Parser;
+use std::time::{Instant};
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -66,19 +67,25 @@ fn rotate_by(pre_image: &Array2<csc411_image::Rgb>, denom: u16, rotate: Option<u
 
         let col_major_iter = pre_image.iter_col_major();
 
+        let start = Instant::now();
         for (i,j,_val) in col_major_iter{
             let original_pixel = pre_image.get(i, j).unwrap().clone();
             modify_pixels(i, j, width, height, rotate, original_pixel, &mut final_image_pixels);
         }
+
+        eprintln!("{:?}", start.elapsed());
     }
     else{
 
         let row_major_iter = pre_image.iter_row_major();
 
+        let start = Instant::now();
         for (i,j,_val) in row_major_iter{
             let original_pixel = pre_image.get(i, j).unwrap().clone();
             modify_pixels(i, j, width, height, rotate, original_pixel, &mut final_image_pixels);
         }
+
+        eprintln!("{:?}", start.elapsed());
     }
 
     if rotate == Some(90) {
