@@ -1,3 +1,4 @@
+#![allow(unused)]
 use array2::Array2;
 use csc411_image::{RgbImage, Read, Write};
 use clap::Parser;
@@ -6,17 +7,20 @@ use std::time::{Instant};
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
-    // Flip
-    #[clap(long = "flip", required = false)]
-    flip: Option<String>,
     // Row Major
     #[clap(long = "row-major", required = false)]
     row_major: bool,
     // Col Major
     #[clap(long = "col-major", required = false)]
     col_major: bool,
+    // Transposw
+    #[clap(long = "transpose", required = false)]
+    transpose: bool,
+    // Flip
+    #[clap(long = "flip", required = false)]
+    flip: Option<String>,
     // Rotation
-    #[clap(short = 'r', long = "rotate")]
+    #[clap(short = 'r', long = "rotate", required = false)]
     rotate: Option<u32>,
     // Path
     #[clap(required = false)]
@@ -26,6 +30,23 @@ struct Args {
 fn main() {
     let args = Args::parse();
     let rotate = args.rotate;
+    let flip = args.flip;
+    let transpose = args.transpose;
+
+    if rotate != None && rotate != Some(90) && rotate != Some(180){
+        eprintln!("This rotation has not been implemented");
+        std::process::exit(1);
+    }
+
+    if flip != None{
+        eprintln!("flip has not been implemented");
+        std::process::exit(1);
+    }
+
+    if transpose{
+        eprintln!("transpose has not been implemented");
+        std::process::exit(1);
+    }
 
     let image;
     if args.path != None {
@@ -33,6 +54,7 @@ fn main() {
         image = RgbImage::read(input.as_deref()).unwrap();
     }
     else{
+        //read from stdin
         image = RgbImage::read(None).unwrap();
     }
 
@@ -67,28 +89,25 @@ fn rotate_by(pre_image: &Array2<csc411_image::Rgb>, denom: u16, rotate: Option<u
 
         let col_major_iter = pre_image.iter_col_major();
 
-        let start = Instant::now();
+        //starting with a blank pixel vector, for each iteration, the pixel at i,j in the original image is copied
+        //the corresponding location in the rotated image vector, terminates once original image vector has been iterated over
         for (i,j,_val) in col_major_iter{
             let original_pixel = pre_image.get(i, j).unwrap().clone();
             modify_pixels(i, j, width, height, rotate, original_pixel, &mut final_image_pixels);
         }
-
-        eprintln!("{:?}", start.elapsed());
     }
     else{
 
         let row_major_iter = pre_image.iter_row_major();
 
-        let start = Instant::now();
         for (i,j,_val) in row_major_iter{
             let original_pixel = pre_image.get(i, j).unwrap().clone();
             modify_pixels(i, j, width, height, rotate, original_pixel, &mut final_image_pixels);
         }
-
-        eprintln!("{:?}", start.elapsed());
     }
 
     if rotate == Some(90) {
+        //create final image, height and width are flipped for 90-deg rotation
         final_image = csc411_image::RgbImage {
             pixels: final_image_pixels.clone(),
             width: height as u32,
@@ -98,6 +117,7 @@ fn rotate_by(pre_image: &Array2<csc411_image::Rgb>, denom: u16, rotate: Option<u
     }
 
     if rotate == Some(180) {
+        //create final image
         final_image = csc411_image::RgbImage {
             pixels: final_image_pixels.clone(),
             width: width as u32,
